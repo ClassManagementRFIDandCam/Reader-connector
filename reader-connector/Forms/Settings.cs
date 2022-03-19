@@ -16,13 +16,21 @@ using Quobject.SocketIoClientDotNet.Client;
 using reader_connector.Shared;
 using Newtonsoft.Json;
 
+using AForge.Video;
+using AForge.Video.DirectShow;
+using System.IO;
+using System.Drawing.Imaging;
+
+using RestSharp;
+using RestSharp.Authenticators;
+
 namespace reader_connector.Forms
 {
     public partial class Settings : Form, IAsynchronousMessage
     {
         string url = "https://hcmiu-presence.herokuapp.com";
         //string url = "http://localhost:8080";
-
+        Bitmap bitmap;
         public class Room
         {
             public Room() { }
@@ -489,7 +497,89 @@ namespace reader_connector.Forms
             }
         }
 
+        FilterInfoCollection filterInfoCollection;
+        VideoCaptureDevice videoCaptureDevice;
+
         private void Settings_Load(object sender, EventArgs e)
+        {
+            filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            foreach(FilterInfo filterInfo in filterInfoCollection)
+                cboCamera.Items.Add(filterInfo.Name);
+            cboCamera.SelectedIndex = 0;
+            videoCaptureDevice = new VideoCaptureDevice();
+        }
+
+        private void label12_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSta_Click(object sender, EventArgs e)
+        {
+            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cboCamera.SelectedIndex].MonikerString);
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+            videoCaptureDevice.Start();
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            pic.Image = (Bitmap)eventArgs.Frame.Clone();
+
+        }
+
+        private void Settings_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(videoCaptureDevice.IsRunning == true)
+                videoCaptureDevice.Stop();
+        }
+        private async void button1_Click(object sender, EventArgs eventArgs)
+        {
+            pic2.Image = (Bitmap)pic.Image.Clone();
+            string fileName = @"D:\Image\" + DateTime.Now.ToString("MMddyyyy HHmmss") + ".jpg";
+            var bitmap = new Bitmap(pic2.Width, pic2.Height);
+            pic2.DrawToBitmap(bitmap, pic2.ClientRectangle);
+            //System.Drawing.Imaging.ImageFormat imageFormat = null;
+            //imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
+            //bitmap.Save(fileName, imageFormat);
+            System.IO.MemoryStream ms = new MemoryStream();
+            bitmap.Save(ms, ImageFormat.Jpeg);
+            byte[] byteImage = ms.ToArray();
+            var SigBase64 = Convert.ToBase64String(byteImage);
+
+            var client = new RestClient("https://api.iuresearchteam.online");
+            var request = new RestRequest("algo", Method.Post);
+            request.AddHeader("Content-Type", "text/plain");
+            var body = @"" + SigBase64 + "\n" +
+@"";
+            Console.WriteLine(body);
+            request.AddParameter("text/plain", body, ParameterType.RequestBody);
+            var response = await client.ExecuteAsync(request);
+            Console.WriteLine( "This is response "+ response.Content);
+            ResponseLabel.Text = response.Content;
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label13_Click(object sender, EventArgs e)
+        {
+            
+
+        }
+
+        private void TxtLog_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label10_Click(object sender, EventArgs e)
         {
 
         }

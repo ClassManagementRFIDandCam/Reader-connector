@@ -5,6 +5,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RestSharp;
+using RestSharp.Authenticators;
+
 
 namespace reader_connector.Shared
 {
