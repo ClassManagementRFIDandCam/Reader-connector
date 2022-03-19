@@ -405,6 +405,8 @@ namespace reader_connector.Forms
                 BtnStart.Enabled = false;
                 BtnSerialConnect.Text = "Serial connect";
                 LogOutput("Disconnected");
+                // test
+
             }
         }
 
